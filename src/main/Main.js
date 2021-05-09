@@ -122,8 +122,12 @@ function displayStatusUpdate() {
   SpeedTest.ping()
     .then((latency) => {
       logger.performance.debug(`API Latency: ${latency} ms`);
+      TelegramBot.sendPerformanceLog(`API Latency: ${latency} ms\nCPU clock usage for calculations:  ${clockUsagePerCycle.toFixed(2)}%`);
     })
-    .catch((err) => logger.performance.warn(err.message));
+    .catch((err) => {
+      logger.performance.warn(err.message);
+      TelegramBot.sendPerformanceWarn(err.message);
+    });
 }
 
 function handleError(err) {

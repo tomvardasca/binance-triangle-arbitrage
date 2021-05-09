@@ -46,7 +46,7 @@ bot.on("message", (msg) => {
   const chatId = msg.chat.id;
 
   // send a message to the chat acknowledging receipt of their message
-  bot.sendMessage(chatId, "Received your message");
+  // bot.sendMessage(chatId, "Received your message");
 });
 
 module.exports.sendTradeExecution = function sendTradeExecution(expected_profit, age, time_taken, symbol_A, symbol_A_delta, symbol_A_delta_percent) {
@@ -74,6 +74,10 @@ module.exports.sendPerformanceWarn = function sendPerformanceWarn(cpu) {
 
 module.exports.sendHello = function sendHello(msg) {
   bot.sendMessage(chatId, `🏁 Hello - <i>${msg}</i>`, { parse_mode: "HTML" });
+};
+
+module.exports.sendPerformanceLog = function sendPerformanceLog(msg) {
+  bot.sendMessage(chatId, `🏇 Performance - <i>${msg}</i>`, { parse_mode: "HTML" });
 };
 
 module.exports.sendError = function sendError(e) {
