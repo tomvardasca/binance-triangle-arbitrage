@@ -83,7 +83,10 @@ function arbitrageCycleCallback(ticker) {
   const results = CalculationNode.analyze(
     MarketCache.related.trades[ticker],
     depthSnapshots,
-    (e) => logger.performance.warn(e),
+    (e) => {
+      logger.performance.warn(e);
+      TelegramBot.sendPerformanceWarn(e);
+    },
     ArbitrageExecution.isSafeToExecute,
     ArbitrageExecution.executeCalculatedPosition,
   );
