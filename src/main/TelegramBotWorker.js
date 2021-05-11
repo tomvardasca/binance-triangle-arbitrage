@@ -24,9 +24,11 @@ bot.onText(/\/exe ?(\d*)/, (msg, match) => {
     limit = 10;
   }
 
-  Sqlite.getExecutionsSumPerDay(limit)
-    .then((resp) => bot.sendMessage(chatId, resp, { parse_mode: "Markdown" }))
-    .catch((e) => bot.sendMessage(chatId, `🚨 *Error*: ${e}`, { parse_mode: "Markdown" }));
+  try {
+    bot.sendMessage(chatId, Sqlite.getExecutionsSumPerDay(limit), { parse_mode: "Markdown" });
+  } catch (e) {
+    bot.sendMessage(chatId, `🚨 *Error*: ${e}`, { parse_mode: "Markdown" });
+  }
 });
 
 // Matches "/echo [whatever]"

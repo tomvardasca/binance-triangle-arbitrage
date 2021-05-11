@@ -1,31 +1,20 @@
 const logger = require("./Loggers");
-
-const sqlite3 = require("sqlite3").verbose();
+const Database = require("better-sqlite3");
 
 let db;
 
 function startDatabase() {
-  db = new sqlite3.Database("./my-trades.db", (e) => {
-    if (e) {
-      logger.performance.error("Error opening Sqlite.", e);
-    } else {
-      db.exec(
-        `pragma journal_mode = WAL;
-                 pragma synchronous = normal;
-                 pragma temp_store = memory;
-                 pragma mmap_size = 30000000000;
-                 pragma page_size = 32768;
-                 pragma vacuum;
-                 pragma optimize;
-        `,
-        (e) => {
-          if (!e) {
-            createTradeExecutionTable();
-          }
-        },
-      );
-    }
-  });
+  db = new Database("./my-trades.db");
+  db.pragma("journal_mode = WAL");
+  db.pragma("synchronous = normal");
+  db.pragma("temp_store = memory");
+  db.pragma("mmap_size = 30000000000");
+  db.pragma("page_size = 32768");
+  db.pragma("vacuum");
+  db.pragma("optimize");
+
+  createTradeExecutionTable();
+
   return db;
 }
 
@@ -35,37 +24,37 @@ function createTradeExecutionTable() {
   if (!db) {
     db = startDatabase();
   }
-  logger.performance.debug("Create Trade Execution Table if not exists");
-  db.run(`CREATE TABLE IF NOT EXISTS TRADE_EXECUTION 
-                (
-                    trade_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                    calculated_id TEXT NOT NULL,
-                    age INTEGER NOT NULL,
-                    expected_profit NUMERIC NOT NULL,
-                    time_taken INTEGER NOT NULL,
-                    AB_ticker TEXT NOT NULL,
-                    AB_expected_conversion NUMERIC NOT NULL,
-                    AB_observed_conversion NUMERIC NOT NULL,
-                    AB_price_change NUMERIC NOT NULL,
-                    BC_ticker TEXT NOT NULL,
-                    BC_expected_conversion NUMERIC NOT NULL,
-                    BC_observed_conversion NUMERIC NOT NULL,
-                    BC_price_change NUMERIC NOT NULL,
-                    CA_ticker TEXT NOT NULL,
-                    CA_expected_conversion NUMERIC NOT NULL,
-                    CA_observed_conversion NUMERIC NOT NULL,
-                    CA_price_change NUMERIC NOT NULL,
-                    symbol_A TEXT NOT NULL,
-                    symbol_A_delta NUMERIC NOT NULL,
-                    symbol_A_delta_percent NUMERIC NOT NULL,
-                    symbol_B TEXT NOT NULL,
-                    symbol_B_delta NUMERIC NOT NULL,
-                    symbol_B_delta_percent NUMERIC NOT NULL,
-                    symbol_C TEXT NOT NULL,
-                    symbol_C_delta NUMERIC NOT NULL,
-                    symbol_C_delta_percent NUMERIC NOT NULL,
-                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-                )`);
+  const createTable = db.prepare(`CREATE TABLE IF NOT EXISTS TRADE_EXECUTION 
+                                                        (
+                                                            trade_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                                            calculated_id TEXT NOT NULL,
+                                                            age INTEGER NOT NULL,
+                                                            expected_profit NUMERIC NOT NULL,
+                                                            time_taken INTEGER NOT NULL,
+                                                            AB_ticker TEXT NOT NULL,
+                                                            AB_expected_conversion NUMERIC NOT NULL,
+                                                            AB_observed_conversion NUMERIC NOT NULL,
+                                                            AB_price_change NUMERIC NOT NULL,
+                                                            BC_ticker TEXT NOT NULL,
+                                                            BC_expected_conversion NUMERIC NOT NULL,
+                                                            BC_observed_conversion NUMERIC NOT NULL,
+                                                            BC_price_change NUMERIC NOT NULL,
+                                                            CA_ticker TEXT NOT NULL,
+                                                            CA_expected_conversion NUMERIC NOT NULL,
+                                                            CA_observed_conversion NUMERIC NOT NULL,
+                                                            CA_price_change NUMERIC NOT NULL,
+                                                            symbol_A TEXT NOT NULL,
+                                                            symbol_A_delta NUMERIC NOT NULL,
+                                                            symbol_A_delta_percent NUMERIC NOT NULL,
+                                                            symbol_B TEXT NOT NULL,
+                                                            symbol_B_delta NUMERIC NOT NULL,
+                                                            symbol_B_delta_percent NUMERIC NOT NULL,
+                                                            symbol_C TEXT NOT NULL,
+                                                            symbol_C_delta NUMERIC NOT NULL,
+                                                            symbol_C_delta_percent NUMERIC NOT NULL,
+                                                            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+                                                        )`);
+  createTable.run();
 }
 
 module.exports.insertTradeExecution = function insertTradeExecution(
@@ -98,7 +87,7 @@ module.exports.insertTradeExecution = function insertTradeExecution(
   if (!db) {
     db = startDatabase();
   }
-  db.run(
+  const stm = db.prepare(
     `INSERT INTO TRADE_EXECUTION(
       calculated_id,
       age,
@@ -126,6 +115,9 @@ module.exports.insertTradeExecution = function insertTradeExecution(
       symbol_C_delta,
       symbol_C_delta_percent,
     ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+  );
+
+  stm.run(
     calculated_id,
     age,
     expected_profit,
@@ -155,25 +147,19 @@ module.exports.insertTradeExecution = function insertTradeExecution(
 };
 
 module.exports.getExecutionsSumPerDay = function getExecutionsSumPerDay(limit = 10) {
-  return new Promise((resolve, reject) => {
-    if (!db) {
-      db = startDatabase();
-    }
+  if (!db) {
+    db = startDatabase();
+  }
 
-    db.all(
-      `SELECT symbol_A as symbol, strftime('%d-%m-%Y',timestamp) as day, SUM(symbol_A_delta) amount, COUNT(1) as count, AVG(time_taken) as time FROM TRADE_EXECUTION GROUP BY symbol_A, strftime('%d-%m-%Y',timestamp) LIMIT ${limit};`,
-      function (err, rows) {
-        if (err) {
-          return reject(err);
-        }
-        const msg = `*Symbol \| Day \| Amount \| Count \| Time*`;
-        rows.forEach(function (row) {
-          msg += `
+  stm = db.prepare(
+    `SELECT symbol_A as symbol, strftime('%d-%m-%Y',timestamp) as day, SUM(symbol_A_delta) amount, COUNT(1) as count, AVG(time_taken) as time FROM TRADE_EXECUTION GROUP BY symbol_A, strftime('%d-%m-%Y',timestamp) LIMIT ?`,
+  );
+
+  const msg = `*Symbol \| Day \| Amount \| Count \| Time*`;
+  stm.all(limit).forEach(function (row) {
+    msg += `
         ${row.symbol} \| ${row.day} \| ${row.amount} \| ${row.count} \| ${row.time}
         `;
-        });
-        resolve(msg);
-      },
-    );
   });
+  return msg;
 };
