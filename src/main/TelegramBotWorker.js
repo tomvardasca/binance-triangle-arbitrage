@@ -74,5 +74,5 @@ parentPort.on(
   100,
 );
 
-process.on("exit", (...err) => console.log("process.on exit", err));
-process.on("uncaughtException", (...err) => console.log("process.on uncaughtException", err));
+process.on("exit", (...err) => console.log("TelegramBotWorker.on exit", err));
+process.on("uncaughtException", (...err) => console.log("TelegramBotWorker.on uncaughtException", err));
