@@ -25,8 +25,8 @@ bot.onText(/\/exe ?(\d*)/, (msg, match) => {
   }
 
   Sqlite.getExecutionsSumPerDay(limit)
-    .then((resp) => bot.sendMessage(chatId, resp, { parse_mode: "HTML" }))
-    .catch((e) => bot.sendMessage(chatId, `🚨 <b>Error</b>: ${e}`, { parse_mode: "HTML" }));
+    .then((resp) => bot.sendMessage(chatId, resp, { parse_mode: "Markdown" }))
+    .catch((e) => bot.sendMessage(chatId, `🚨 *Error*: ${e}`, { parse_mode: "Markdown" }));
 });
 
 // Matches "/echo [whatever]"
@@ -39,7 +39,7 @@ bot.onText(/\/echo (.+)/, (msg, match) => {
   const resp = match[1]; // the captured "whatever"
 
   // send back the matched "whatever" to the chat
-  bot.sendMessage(chatId, resp, { parse_mode: "HTML" });
+  bot.sendMessage(chatId, resp, { parse_mode: "Markdown" });
 });
 
 // Listen for any kind of message. There are different kinds of
@@ -53,6 +53,9 @@ bot.on("message", (msg) => {
 
 parentPort.on("message", (data) => {
   if (data.newMessage) {
-    bot.sendMessage(chatId, bot.sendMessage(chatId, data.newMessage, { parse_mode: "HTML" }));
+    bot.sendMessage(chatId, data.newMessage, { parse_mode: "Markdown" });
   }
 });
+
+process.on("exit", (...err) => console.log("process.on exit", err));
+process.on("uncaughtException", (...err) => console.log("process.on uncaughtException", err));

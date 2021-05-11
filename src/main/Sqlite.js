@@ -4,7 +4,7 @@ const sqlite3 = require("sqlite3").verbose();
 
 let db;
 
-module.exports.startDatabase = function startDatabase() {
+function startDatabase() {
   db = new sqlite3.Database("./my-trades.db", (e) => {
     if (e) {
       logger.performance.error("Error opening Sqlite.", e);
@@ -26,12 +26,14 @@ module.exports.startDatabase = function startDatabase() {
       );
     }
   });
-};
+  return db;
+}
+
+module.exports.startDatabase = startDatabase;
 
 function createTradeExecutionTable() {
   if (!db) {
-    logger.performance.error("Database not yet started!");
-    return;
+    db = startDatabase();
   }
   logger.performance.debug("Create Trade Execution Table if not exists");
   db.run(`CREATE TABLE IF NOT EXISTS TRADE_EXECUTION 
@@ -94,8 +96,7 @@ module.exports.insertTradeExecution = function insertTradeExecution(
   symbol_C_delta_percent,
 ) {
   if (!db) {
-    logger.performance.error("Database not yet started!");
-    return;
+    db = startDatabase();
   }
   db.run(
     `INSERT INTO TRADE_EXECUTION(
@@ -156,9 +157,7 @@ module.exports.insertTradeExecution = function insertTradeExecution(
 module.exports.getExecutionsSumPerDay = function getExecutionsSumPerDay(limit = 10) {
   return new Promise((resolve, reject) => {
     if (!db) {
-      logger.performance.error("Database not yet started!");
-      reject("Database not yet started!");
-      return;
+      db = startDatabase();
     }
 
     db.all(
@@ -167,10 +166,10 @@ module.exports.getExecutionsSumPerDay = function getExecutionsSumPerDay(limit = 
         if (err) {
           return reject(err);
         }
-        const msg = "<b>Symbol | Day | Amount | Count | Time</b>";
+        const msg = `*Symbol \| Day \| Amount \| Count \| Time*`;
         rows.forEach(function (row) {
           msg += `
-        ${row.symbol} | ${row.day} | ${row.amount} | ${row.count} | ${row.time}
+        ${row.symbol} \| ${row.day} \| ${row.amount} \| ${row.count} \| ${row.time}
         `;
         });
         resolve(msg);

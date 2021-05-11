@@ -34,11 +34,11 @@ process.on("uncaughtException", handleError);
 
 console.log(`Checking latency ...`);
 SpeedTest.multiPing(5)
-  .then((pings) => {
+  .then(async (pings) => {
     const msg = `Experiencing ${Util.average(pings).toFixed(0)} ms of latency`;
     console.log(msg);
-    TelegramBot.sendHello(msg);
     logger.performance.info(msg);
+    TelegramBot.sendHello(msg);
   })
   .then(MarketCache.initialize)
   .then(checkBalances)
