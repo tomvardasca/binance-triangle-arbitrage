@@ -155,7 +155,7 @@ module.exports.getExecutionsSumPerDay = function getExecutionsSumPerDay(limit = 
     `SELECT symbol_A as symbol, strftime('%d-%m-%Y',timestamp) as day, SUM(symbol_A_delta) amount, COUNT(1) as count, AVG(time_taken) as time FROM TRADE_EXECUTION GROUP BY symbol_A, strftime('%d-%m-%Y',timestamp) LIMIT ?`,
   );
 
-  const msg = `*Symbol \| Day \| Amount \| Count \| Time*`;
+  let msg = `*Symbol \| Day \| Amount \| Count \| Time*`;
   stm.all(limit).forEach(function (row) {
     msg += `
         ${row.symbol} \| ${row.day} \| ${row.amount} \| ${row.count} \| ${row.time}
