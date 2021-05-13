@@ -113,7 +113,7 @@ module.exports.insertTradeExecution = function insertTradeExecution(
       symbol_B_delta_percent,
       symbol_C,
       symbol_C_delta,
-      symbol_C_delta_percent,
+      symbol_C_delta_percent
     ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
   );
 
