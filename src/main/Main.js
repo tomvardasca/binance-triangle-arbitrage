@@ -75,17 +75,33 @@ SpeedTest.multiPing(5)
   })
   .catch(handleError);
 
+const throttle = (func, limit) => {
+  let inThrottle;
+  return function () {
+    const args = arguments;
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    }
+  };
+};
+
 function arbitrageCycleCallback(ticker) {
   if (!isSafeToCalculateArbitrage()) return;
   const startTime = Date.now();
   const depthSnapshots = BinanceApi.getDepthSnapshots(MarketCache.related.tickers[ticker]);
+  const logT = throttle((e) => {
+    TelegramBot.sendPerformanceWarn(e);
+  }, 1000);
 
   const results = CalculationNode.analyze(
     MarketCache.related.trades[ticker],
     depthSnapshots,
     (e) => {
       logger.performance.warn(e);
-      TelegramBot.sendPerformanceWarn(e);
+      logT(e);
     },
     ArbitrageExecution.isSafeToExecute,
     ArbitrageExecution.executeCalculatedPosition,

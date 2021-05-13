@@ -158,8 +158,8 @@ const ArbitrageExecution = {
             percent.a.toFixed(4),
           );
         } catch (error) {
-          logger.execution.error(err.message);
-          TelegramBot.sendError(err);
+          logger.execution.error(error.message);
+          TelegramBot.sendError(error);
         }
       })
       .catch((err) => {

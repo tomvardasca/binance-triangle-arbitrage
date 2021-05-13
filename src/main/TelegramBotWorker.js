@@ -53,26 +53,13 @@ bot.on("message", (msg) => {
   // bot.sendMessage(chatId, "Received your message");
 });
 
-const throttle = (func, limit) => {
-  let inThrottle;
-  return function () {
-    const args = arguments;
-    const context = this;
-    if (!inThrottle) {
-      func.apply(context, args);
-      inThrottle = true;
-      setTimeout(() => (inThrottle = false), limit);
-    }
-  };
-};
-
 parentPort.on(
   "message",
-  throttle((data) => {
+  (data) => {
     if (data.newMessage) {
       bot.sendMessage(chatId, data.newMessage, { parse_mode: "Markdown" });
     }
-  }),
+  },
   100,
 );
 
